@@ -30,6 +30,26 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- **Secrets**: the login of the SLZB web interface (username and password), if
+  you set one, is a field of the Gladys configuration (the password a `secret`
+  field). The integration reads it from Gladys, keeps it in memory, sends it
+  only to the coordinators (HTTP Basic authentication, over the local network,
+  in plain HTTP: the SLZB web interface has no HTTPS), and never writes it to
+  `/data` nor to the logs.
+- **Stored in `/data`**: `smlight-state.json`, the firmware versions already
+  announced to the scenes and the last IP address of each coordinator (by MAC
+  address). Nothing else.
+- **Network**: requests go to the coordinators (the addresses typed in the
+  configuration or found by the mDNS discovery of Gladys), on the local
+  network: HTTP on the port of their web interface, and their event stream on
+  port 81. With the firmware check on (default), one HTTPS request per firmware
+  and per day goes to the SMLIGHT update server (`updates.smlight.tech`), with
+  the model of the coordinator, never its address nor its login. The
+  integration opens no port and installs nothing on the coordinators.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+the SLZB coordinators and their firmware (report to SMLIGHT), and the other
+devices and services of your network.

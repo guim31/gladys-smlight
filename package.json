@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-smlight",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "SMLIGHT SLZB Zigbee coordinators for Gladys Assistant: health, firmware updates, restarts, over the local network.",
   "type": "module",
   "main": "index.js",
   "scripts": {

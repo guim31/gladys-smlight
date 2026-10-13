@@ -1,67 +1,172 @@
-# Template de démonstration
+# SMLIGHT SLZB
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Surveillez vos coordinateurs Zigbee [SMLIGHT](https://smlight.tech) SLZB
+(SLZB-06, SLZB-06M, SLZB-06p7, SLZB-07, SLZB-MR1, Ultima…) depuis Gladys, en
+réseau local : leurs températures et leur mémoire, la connexion de
+Zigbee2MQTT, leur liaison réseau, leur firmware et ses mises à jour, et
+redémarrez-les, eux ou leur puce Zigbee, quand le réseau Zigbee fait des
+siennes.
 
-## Ce que vous obtenez
+> **Développée sans le matériel : vos retours sont les bienvenus.** Cette
+> intégration a été construite et testée sur de vraies réponses de
+> coordinateurs SLZB publiées par la bibliothèque pysmlight et l'intégration
+> Home Assistant, pas sur un coordinateur posé sur un bureau. Si quelque chose
+> ne fonctionne pas comme décrit, dites-le sur le
+> [forum Gladys](https://community.gladysassistant.com) ou dans les
+> [issues](https://github.com/guim31/gladys-smlight/issues).
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+Cette intégration n'est pas affiliée à SMLIGHT.
 
-## Configuration
+## Ce qu'il vous faut
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+- Gladys Assistant 5.1.0 ou plus récent.
+- Un coordinateur SLZB avec un **firmware v2.3.6 ou plus récent** (SLZB-OS),
+  sur le même réseau que Gladys. Les firmwares plus anciens n'ont pas d'API
+  locale à lire : mettez-le d'abord à jour depuis l'interface web du SLZB.
+- Si vous avez protégé l'interface web du SLZB par un identifiant
+  (**Settings** → **Security**), cet identifiant et son mot de passe.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+L'intégration lit le coordinateur ; elle ne remplace pas Zigbee2MQTT ni ZHA,
+qui continuent de piloter vos appareils Zigbee à travers lui.
 
-## Actions
+## Installation
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+1. Installez **SMLIGHT SLZB** depuis le catalogue de Gladys (ou
+   **Intégrations** → **Installer depuis GitHub** avec
+   `https://github.com/guim31/gladys-smlight`).
+2. Ouvrez l'onglet **Découverte** : les coordinateurs du réseau de Gladys sont
+   trouvés automatiquement (mDNS). Il en manque un ? Saisissez son adresse IP dans **Configuration** (**Adresses IP des coordinateurs**) (l'interface web du SLZB l'affiche sur sa page
+   **Network**), par exemple `192.168.1.50` ; plusieurs adresses se séparent
+   par des virgules.
+3. Connexion : remplissez **Identifiant** et **Mot de passe** seulement si
+   l'interface web du SLZB en demande un. Le même identifiant sert pour tous
+   les coordinateurs.
+4. Cliquez sur **Tester la connexion** : le message sous le bouton liste les
+   coordinateurs trouvés et ce qui a échoué.
+5. Dans **Découverte**, cliquez sur **Ajouter à Gladys** pour chaque
+   coordinateur, choisissez une pièce, enregistrez.
+
+Options :
+
+- **Intervalle de rafraîchissement** : 30 secondes ou 1 minute (par défaut).
+- **Vérifier les mises à jour du firmware** : activé par défaut. Une fois par
+  jour, l'intégration demande au serveur de mises à jour de SMLIGHT, sur
+  Internet, le dernier firmware de chaque coordinateur, comme le fait
+  l'interface web du SLZB. Désactivez-le pour rester entièrement en local : les
+  fonctionnalités des dernières versions et de la mise à jour ne sont alors pas
+  créées.
+- **Langue des noms de fonctionnalités** : anglais, français (par défaut),
+  allemand ou espagnol. Les noms sont donnés à l'ajout de l'appareil.
+
+## L'appareil de chaque coordinateur
+
+Chaque coordinateur est un appareil, au nom de son nom d'hôte. Seules les
+fonctionnalités que le coordinateur propose sont créées.
+
+| Fonctionnalité                                     | Ce que c'est                                                                                                                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Température du cœur ESP32                          | Température de la puce ESP32 qui fait tourner le coordinateur, en °C                                                                                                                                                           |
+| Température de la puce Zigbee                      | Température de la puce radio Zigbee, en °C (Température de la radio 1, Température de la radio 2 sur les modèles à deux radios)                                                                                                |
+| Mémoire vive utilisée, Système de fichiers utilisé | Mémoire utilisée par le coordinateur, en kilo-octets (la jauge va jusqu'au total)                                                                                                                                              |
+| Temps de fonctionnement                            | Temps depuis le démarrage du coordinateur, en heures                                                                                                                                                                           |
+| Client Zigbee connecté depuis                      | Temps depuis que Zigbee2MQTT ou ZHA s'est connecté au coordinateur par le réseau, en heures ; 0 : aucun client connecté                                                                                                        |
+| Connexion réseau                                   | Ethernet, Wi-Fi ou LTE                                                                                                                                                                                                         |
+| Mode du coordinateur                               | Comment la radio Zigbee est proposée : Ethernet, Wi-Fi ou USB                                                                                                                                                                  |
+| Firmware du cœur, Firmware Zigbee                  | Versions installées (Firmware de la radio 1, Firmware de la radio 2 sur les modèles à plusieurs radios)                                                                                                                        |
+| Dernier firmware du cœur, Dernier firmware Zigbee  | Dernières versions sur le serveur de mises à jour de SMLIGHT, sur le canal de firmware choisi dans l'interface web du SLZB (Dernier firmware de la radio 1, Dernier firmware de la radio 2 sur les modèles à plusieurs radios) |
+| Mise à jour du firmware disponible                 | Actif quand un firmware du cœur ou Zigbee plus récent existe                                                                                                                                                                   |
+| Internet joignable                                 | Si le coordinateur atteint Internet (demandé toutes les 15 minutes)                                                                                                                                                            |
+| LED éteintes, Mode nuit des LED                    | Interrupteurs : éteindre les LED du coordinateur, ou les atténuer la nuit, quand le firmware le propose                                                                                                                        |
+| Redémarrer le coordinateur                         | Bouton « Appuyer » : redémarre tout le coordinateur (environ 20 secondes sans Zigbee)                                                                                                                                          |
+| Redémarrer la puce Zigbee                          | Bouton « Appuyer » : redémarre seulement la radio Zigbee (Redémarrer la radio 1, Redémarrer la radio 2 sur l'Ultima et les modèles U)                                                                                          |
+
+Les valeurs sont lues toutes les 30 ou 60 secondes, et seules celles qui ont
+changé sont envoyées à Gladys. L'intégration **ne flashe jamais de firmware et
+ne change jamais le mode du coordinateur** : une erreur laisserait votre réseau
+Zigbee sans son coordinateur. Utilisez l'interface web du SLZB pour cela.
+
+## Widget du tableau de bord
+
+Ajoutez le widget **Coordinateur SLZB** à un tableau de bord (**Éditer**, puis
+**Ajouter** dans une colonne). Choisissez le coordinateur dans ses réglages ; vide, il
+affiche le premier. Il montre :
+
+- les températures de l'ESP32 et de la puce Zigbee (en direct) et le temps de
+  fonctionnement ;
+- l'état du coordinateur (en ligne, injoignable, connexion refusée), si un
+  client Zigbee est connecté, la liaison réseau et le mode ;
+- le firmware installé, avec la nouvelle version à côté quand il y en a une ;
+- si le coordinateur atteint Internet ;
+- les boutons **Redém. Zigbee** (**Redém. radio 1**, **Redém. radio 2** sur les
+  modèles qui redémarrent chaque radio) et **Redémarrer**, qui demandent chacun
+  une confirmation.
 
 ## Scènes
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+### Déclencheurs
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+- **Mise à jour du firmware SLZB disponible** : un nouveau firmware du cœur ou
+  Zigbee est sorti pour un coordinateur. Une fois par version, même après un
+  redémarrage. Filtres : le coordinateur, le firmware (_Cœur (ESP32)_ ou
+  _Puce Zigbee_). Variables : le nom du coordinateur, le firmware (`core`,
+  `zigbee`), la version installée et la nouvelle version.
+- **Coordinateur SLZB injoignable** : un coordinateur ne répond plus, deux
+  lectures de suite (la seconde 15 secondes après la première). Variable : ce
+  qui s'est passé.
+- **Coordinateur SLZB de retour** : il répond de nouveau. Variable : les
+  minutes sans réponse.
+- **Coordinateur SLZB redémarré** : son temps de fonctionnement est revenu à
+  zéro (coupure, plantage, mise à jour, commande de redémarrage), même quand le
+  redémarrage a été trop rapide pour passer pour une panne. Filtre et variable :
+  l'origine, `gladys` quand Gladys a demandé le redémarrage dans les 3 minutes
+  précédentes, `other` sinon. Variable : le temps de fonctionnement avant le
+  redémarrage, en heures.
 
-## Tableau de bord
+### Idées de scènes
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+- _Coordinateur SLZB injoignable_ → envoyer un message « Le coordinateur
+  Zigbee ne répond plus : les appareils Zigbee sont hors ligne », et allumer
+  une lumière du couloir qui n'est pas en Zigbee.
+- _Coordinateur SLZB redémarré_ avec l'origine _Hors de Gladys_ → envoyer un
+  message avec le temps de fonctionnement précédent : un coordinateur qui
+  redémarre tout seul a souvent un problème d'alimentation.
+- _Mise à jour du firmware SLZB disponible_ → envoyer un message « Le firmware
+  {{triggerEvent.data.latest_version}} est sorti pour
+  {{triggerEvent.data.coordinator}} », et le mettre à jour depuis l'interface
+  web du SLZB quand cela vous arrange.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **Aucun coordinateur dans Découverte** : le mDNS ne traverse peut-être pas
+  votre réseau (VLAN, Docker sans réseau hôte pour Gladys…). Saisissez
+  l'adresse IP du coordinateur dans la configuration, puis cliquez sur
+  **Tester la connexion**.
+- **Connexion refusée** : l'interface web du SLZB est protégée ; saisissez son
+  identifiant et son mot de passe dans la configuration.
+- **« pas un SLZB, ou firmware antérieur à la v2.3.6 »** : mettez le firmware
+  à jour depuis l'interface web du SLZB (ou le flasheur web de SMLIGHT), ou
+  vérifiez l'adresse.
+- **Internet joignable reste vide** : l'état vient du flux d'événements du
+  coordinateur (port 81 depuis le firmware v2.6.8) ; sans lui, l'intégration
+  n'envoie aucun état Internet plutôt qu'un état faux.
+- **Le dernier firmware reste vide** : le modèle du coordinateur n'est pas dans
+  le catalogue de SMLIGHT, ou Gladys n'atteint pas `updates.smlight.tech` ;
+  l'intégration réessaie toutes les heures.
+- Journaux détaillés : mettez `LOG_LEVEL=debug` dans l'environnement du
+  conteneur.
+
+## Limites
+
+- Pas de mise à jour du firmware, pas de changement de mode, pas de réglage
+  Wi-Fi ou réseau depuis Gladys, volontairement.
+- Le proxy Bluetooth, l'infrarouge, le buzzer et l'éclairage d'ambiance de
+  l'Ultima ne sont pas pris en charge.
+- Les firmwares antérieurs à la v2.3.6 ne sont pas pris en charge.
+- Requêtes : deux petites requêtes HTTP par coordinateur toutes les 30 ou 60
+  secondes, une demande d'état Internet toutes les 15 minutes, et, avec
+  l'option, une requête par firmware (cœur et chaque radio) et par jour vers le
+  serveur de mises à jour de SMLIGHT. Rien d'autre ne sort de votre réseau.
+- L'identifiant est le même pour tous les coordinateurs.
+- Les noms des fonctionnalités sont choisis à l'ajout de l'appareil ; un
+  coordinateur dont les radios changent (Thread au lieu de Zigbee, une nouvelle
+  puce) propose une **Mise à jour** dans l'onglet Découverte.

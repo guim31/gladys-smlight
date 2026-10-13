@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "restart" # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +31,24 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only (src/app.js), handlers registered before connect()
+src/app.js                        registers every SDK handler on the hub (also used by the tests)
+src/hub.js                        discovery, reading timer, scene events, commands, event streams
+src/devices.js                    the device of a coordinator: features, names, states
+src/widgets.js                    the "slzb" dashboard widget (manifest `widgets`)
+src/texts.js                      the four-language messages (connection status, report, errors)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+src/store.js                      /data/smlight-state.json (announced updates, last addresses)
+src/issues.js                     a repeated failure logged once, its end once
+src/smlight/http.js               node:http request + Server-Sent Events stream (the network seams)
+src/smlight/client.js             the local API of one SLZB (ported from pysmlight web.py)
+src/smlight/model.js              /ha_info and /ha_sensors parsing (pysmlight models.py)
+src/smlight/firmware.js           SMLIGHT firmware catalog and version comparison
+src/smlight/events.js             event stream parser and reconnection
+gladys-assistant-integration.json manifest: name, config_schema, actions, triggers, widget...
+docs/{en,fr,de,es}.md             user documentation, same sections, re-hosted by Gladys
+test/                             node --test, against the SDK's fake Gladys and test/helpers/fakeSlzb.js
+test/fixtures/smlight/            real SLZB answers (pysmlight and Home Assistant fixtures, anonymized)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +78,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish (see
+  "Langues" below): action messages, widget texts, feature names, manifest
+  texts, and `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -197,6 +206,44 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+## SMLIGHT SLZB (propre à ce dépôt)
+
+**API locale** (portée de pysmlight, Apache-2.0 ; vérifiée sur ses fixtures et celles de Home
+Assistant, pas sur un appareil) :
+
+- `GET /ha_info` → `{ "Info": … }` et `GET /ha_sensors` → `{ "Sensors": … }`, depuis le firmware
+  **v2.3.6**. Avant : 404 ou `URL NOT FOUND` (pysmlight lit alors la page « dashboard », pas nous :
+  firmware signalé comme non pris en charge). Les températures arrivent **en chaînes** (`"39.44"`),
+  `zb_version` en nombre ou en chaîne, `-1` pour un firmware Zigbee personnalisé.
+- Avant la v2.5.0, une seule radio décrite au premier niveau de `Info` (pas de `radios`) ; sur
+  l'Ultima, la 3e radio (Z-Wave) n'existe que si `addons.zwave` ; une radio `zb_type: -1` n'a pas
+  de firmware (emplacement vide) : ni fonctionnalité, ni bouton.
+- Modèle : normaliser `P`→`p` et `MG`→`Mg` (SLZB-06P7 → SLZB-06p7) pour le catalogue de firmware.
+- Commandes : `GET /api2?action=4&cmd=3` (redémarrage), `cmd=1` (radio ; `&idx=n` **seulement si
+  n > 0**), réponse `ok`. LED : `POST /settings/saveParams`, formulaire
+  `pageId=8&disableLeds=on&ha=True` (le `True` Python de pysmlight). Identifiant : HTTP Basic.
+- Le redémarrage par radio n'est proposé que sur les modèles ESP32-S3 (`u_device`), comme dans HA ;
+  sur un MR1 (ESP32), seule la première radio.
+- **Flux SSE** : `http://<hôte>:81/` depuis la v2.6.8.dev26, `http://<hôte>/events` avant.
+  `EVENT_INET_STATE` (`ok` = Internet joignable) ne vient **qu'en réponse** à
+  `GET /api2?action=1&param=inetState` : sans flux, pas d'état Internet (on n'en publie pas plutôt
+  qu'un état périmé). `SAVE_PARAMS` (`{page, origin, changes, needReboot}`) porte les réglages
+  changés ailleurs.
+- **Catalogue de firmware** : `https://updates.smlight.tech/services/api/slzb-06x-ota.php`,
+  `type=ESP|ESPs3` → `{ fw: [{ ver, dev, … }] }`, `type=ZB&format=slzb&device=<id>&idx=<n>&ch=0|1`
+  → `[{ type: "0", rev, prod, … }]` (`type` en **chaîne**). pysmlight ne garde sur le canal dev
+  que les builds dev : ici, le plus récent de tous (sinon rien n'est proposé quand une release les
+  dépasse). Une fois par jour, une heure après un échec ; désactivable (`firmware_check`).
+- mDNS : `_slzb-06._tcp` (le motif zeroconf de HA) ; le cœur rend `addresses` (IPv4 préférée).
+- Le redémarrage se détecte à l'uptime **plus bas que le précédent plus le temps écoulé** :
+  vu même pendant une panne, ou entre deux lectures (un redémarrage dure ~15 s).
+
+**Choix de conception** : pas d'action de scène (les fonctionnalités `button/push` et `switch/binary`
+se pilotent déjà par « Contrôler un appareil ») ; pas de flash ni de changement de mode ; temps en
+heures à une décimale (une valeur toutes les 6 min, pas à chaque lecture) ; un seul identifiant
+pour tous les coordinateurs ; `input/binary` pour « mise à jour disponible » et « Internet
+joignable » ; les fonctionnalités de version disponible n'existent qu'avec la vérification active.
 
 ## Store
 

@@ -1,0 +1,40 @@
+[
+  {
+    "type": "0",
+    "baud": 115200,
+    "rev": "20240510",
+    "notes": "Updated version 10 May 2024\nFor 'adapter: ember' adapter settings in Z2M!\nREQUIRES CORE v2.2.0 or higher\nPlease read https://github.com/Koenkk/zigbee2mqtt/discussions/21462\nbefore flashing!\nGreen LED and Zigbee network scanning is not supported in this firmware!\nChange your config:\n\nadapter: ember\nrtscts: false",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06m/ncp-uart-hw-v7.4.1.0-slzb-06m-115200.gbl"
+  },
+  {
+    "type": "0",
+    "baud": 115200,
+    "rev": "20240330",
+    "notes": "",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06m/ncp-uart-hw-v7.3.1.0-slzb-06m-115200.gbl"
+  },
+  {
+    "prod": true,
+    "type": "0",
+    "rev": "20231030",
+    "notes": "Factory FW",
+    "baud": 115200,
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06m/06M_768_0.2.gbl"
+  },
+  {
+    "prod": true,
+    "type": "2",
+    "rev": "20241105",
+    "notes": "OpenThread Border Router firmware.\nPlease install OTBR addon in your HA to work with this firmware.",
+    "baud": 460800,
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06m/ot-rcp-v2.4.2.0-slzb-06m-460800.gbl"
+  },
+  {
+    "prod": true,
+    "type": "1",
+    "rev": "20231130",
+    "notes": "Router firmware",
+    "baud": 0,
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06m/06M_router.gbl"
+  }
+]
