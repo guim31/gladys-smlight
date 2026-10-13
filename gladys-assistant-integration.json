@@ -1,177 +1,619 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "SMLIGHT SLZB",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "SMLIGHT SLZB Zigbee coordinators on the local network: health, firmware updates, restarts.",
+    "fr": "Coordinateurs Zigbee SMLIGHT SLZB en local : état, mises à jour du firmware, redémarrages.",
+    "de": "SMLIGHT-SLZB-Zigbee-Koordinatoren im lokalen Netz: Zustand, Firmware-Updates, Neustarts.",
+    "es": "Coordinadores Zigbee SMLIGHT SLZB en la red local: estado, actualizaciones de firmware, reinicios."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-smlight:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-smlight/main/cover.png",
+  "categories": ["protocols", "network"],
+  "transports": ["local"],
+  "network_discovery": [
+    {
+      "type": "mdns",
+      "service": "_slzb-06._tcp"
+    }
+  ],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Finding your coordinators",
+        "fr": "Trouver vos coordinateurs",
+        "de": "Deine Koordinatoren finden",
+        "es": "Encontrar sus coordinadores"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "SLZB coordinators on the same network as Gladys are found automatically (mDNS): open the Discover tab. If one is missing, enter its IP address below (shown in the SLZB web interface, Network page).",
+        "fr": "Les coordinateurs SLZB du même réseau que Gladys sont trouvés automatiquement (mDNS) : ouvrez l'onglet Découverte. S'il en manque un, saisissez son adresse IP ci-dessous (affichée dans l'interface web du SLZB, page Network).",
+        "de": "SLZB-Koordinatoren im selben Netzwerk wie Gladys werden automatisch gefunden (mDNS): Öffne den Tab „Entdecken“. Fehlt einer, gib unten seine IP-Adresse ein (in der SLZB-Weboberfläche auf der Seite Network angezeigt).",
+        "es": "Los coordinadores SLZB de la misma red que Gladys se encuentran automáticamente (mDNS): abra la pestaña Descubrir. Si falta alguno, introduzca su dirección IP a continuación (se muestra en la interfaz web del SLZB, página Network)."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-smlight/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Installationsanleitung",
+            "es": "Guía de instalación"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "hosts",
+      "type": "string",
+      "label": {
+        "en": "Coordinator IP addresses",
+        "fr": "Adresses IP des coordinateurs",
+        "de": "IP-Adressen der Koordinatoren",
+        "es": "Direcciones IP de los coordinadores"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
       "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+        "en": "Optional, separated by commas. Only needed for the coordinators automatic discovery does not find.",
+        "fr": "Facultatif, séparées par des virgules. Seulement pour les coordinateurs que la découverte automatique ne trouve pas.",
+        "de": "Optional, durch Kommas getrennt. Nur für Koordinatoren nötig, die die automatische Erkennung nicht findet.",
+        "es": "Opcional, separadas por comas. Solo para los coordinadores que el descubrimiento automático no encuentra."
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "placeholder": {
+        "en": "e.g. 192.168.1.50, 192.168.1.51",
+        "fr": "ex. 192.168.1.50, 192.168.1.51",
+        "de": "z. B. 192.168.1.50, 192.168.1.51",
+        "es": "p. ej. 192.168.1.50, 192.168.1.51"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "login",
+      "type": "section",
+      "label": {
+        "en": "Web interface login",
+        "fr": "Connexion à l'interface web",
+        "de": "Anmeldung an der Weboberfläche",
+        "es": "Acceso a la interfaz web"
+      },
+      "description": {
+        "en": "Only if you protected the SLZB web interface with a login (Settings, Security page). The same login is used for every coordinator.",
+        "fr": "Seulement si vous avez protégé l'interface web du SLZB par un identifiant (page Settings, Security). Le même identifiant sert pour tous les coordinateurs.",
+        "de": "Nur wenn du die SLZB-Weboberfläche mit einer Anmeldung geschützt hast (Seite Settings, Security). Dieselbe Anmeldung gilt für alle Koordinatoren.",
+        "es": "Solo si ha protegido la interfaz web del SLZB con un usuario (página Settings, Security). El mismo usuario sirve para todos los coordinadores."
+      }
+    },
+    {
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "Username",
+        "fr": "Identifiant",
+        "de": "Benutzername",
+        "es": "Usuario"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "required": false
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often the coordinators are read. Each reading is two small requests.",
+        "fr": "Fréquence de lecture des coordinateurs. Chaque lecture fait deux petites requêtes.",
+        "de": "Wie oft die Koordinatoren abgefragt werden. Jede Abfrage sind zwei kleine Anfragen.",
+        "es": "Con qué frecuencia se leen los coordinadores. Cada lectura son dos pequeñas peticiones."
+      },
+      "required": false,
+      "default": "60",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "firmware_check",
+      "type": "boolean",
+      "label": {
+        "en": "Check for firmware updates",
+        "fr": "Vérifier les mises à jour du firmware",
+        "de": "Nach Firmware-Updates suchen",
+        "es": "Buscar actualizaciones de firmware"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Once a day, on the SMLIGHT update server (Internet), like the SLZB web interface. Nothing is ever installed from Gladys.",
+        "fr": "Une fois par jour, sur le serveur de mises à jour de SMLIGHT (Internet), comme l'interface web du SLZB. Rien n'est jamais installé depuis Gladys.",
+        "de": "Einmal am Tag, beim Update-Server von SMLIGHT (Internet), wie die SLZB-Weboberfläche. Über Gladys wird nie etwas installiert.",
+        "es": "Una vez al día, en el servidor de actualizaciones de SMLIGHT (Internet), como la interfaz web del SLZB. Nunca se instala nada desde Gladys."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": true
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de las funciones"
+      },
+      "description": {
+        "en": "Names given to the features of new devices (Uptime, Core firmware...), and texts of the scene variables.",
+        "fr": "Noms donnés aux fonctionnalités des nouveaux appareils (Temps de fonctionnement, Firmware du cœur…), et textes des variables de scène.",
+        "de": "Namen, die den Funktionen neuer Geräte gegeben werden (Betriebszeit, Core-Firmware…), und Texte der Szenenvariablen.",
+        "es": "Nombres dados a las funciones de los nuevos dispositivos (Tiempo de funcionamiento, Firmware del núcleo…) y textos de las variables de escena."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "description": {
+        "en": "Looks for the coordinators now and reports what answers.",
+        "fr": "Cherche les coordinateurs maintenant et indique ce qui répond.",
+        "de": "Sucht jetzt nach den Koordinatoren und meldet, was antwortet.",
+        "es": "Busca ahora los coordinadores e indica lo que responde."
+      },
+      "timeout_seconds": 45
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "firmware_update_available",
+      "label": {
+        "en": "SLZB firmware update available",
+        "fr": "Mise à jour du firmware SLZB disponible",
+        "de": "SLZB-Firmware-Update verfügbar",
+        "es": "Actualización de firmware SLZB disponible"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A new core or Zigbee firmware is out for a coordinator: once per version, with both version numbers.",
+        "fr": "Un nouveau firmware du cœur ou Zigbee est sorti pour un coordinateur : une fois par version, avec les deux numéros.",
+        "de": "Eine neue Core- oder Zigbee-Firmware ist für einen Koordinator erschienen: einmal pro Version, mit beiden Versionsnummern.",
+        "es": "Ha salido un nuevo firmware del núcleo o Zigbee para un coordinador: una vez por versión, con ambos números."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Coordinator (empty: any)",
+            "fr": "Coordinateur (vide : n'importe lequel)",
+            "de": "Koordinator (leer: beliebig)",
+            "es": "Coordinador (vacío: cualquiera)"
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "component",
+          "type": "select",
+          "label": {
+            "en": "Firmware (empty: any)",
+            "fr": "Firmware (vide : n'importe lequel)",
+            "de": "Firmware (leer: beliebig)",
+            "es": "Firmware (vacío: cualquiera)"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "core",
+              "label": {
+                "en": "Core (ESP32)",
+                "fr": "Cœur (ESP32)",
+                "de": "Core (ESP32)",
+                "es": "Núcleo (ESP32)"
+              }
+            },
+            {
+              "value": "zigbee",
+              "label": {
+                "en": "Zigbee chip",
+                "fr": "Puce Zigbee",
+                "de": "Zigbee-Chip",
+                "es": "Chip Zigbee"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "coordinator",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Coordinator name",
+            "fr": "Nom du coordinateur",
+            "de": "Name des Koordinators",
+            "es": "Nombre del coordinador"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Coordinator device",
+            "fr": "Appareil coordinateur",
+            "de": "Koordinator-Gerät",
+            "es": "Dispositivo coordinador"
+          }
+        },
+        {
+          "key": "component",
+          "type": "string",
+          "label": {
+            "en": "Firmware (core, zigbee)",
+            "fr": "Firmware (core, zigbee)",
+            "de": "Firmware (core, zigbee)",
+            "es": "Firmware (core, zigbee)"
+          }
+        },
+        {
+          "key": "installed_version",
+          "type": "string",
+          "label": {
+            "en": "Installed version",
+            "fr": "Version installée",
+            "de": "Installierte Version",
+            "es": "Versión instalada"
+          }
+        },
+        {
+          "key": "latest_version",
+          "type": "string",
+          "label": {
+            "en": "New version",
+            "fr": "Nouvelle version",
+            "de": "Neue Version",
+            "es": "Nueva versión"
+          }
         }
       ]
-    }
-  ],
-  "scene_actions": [
+    },
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "coordinator_unreachable",
+      "label": {
+        "en": "SLZB coordinator unreachable",
+        "fr": "Coordinateur SLZB injoignable",
+        "de": "SLZB-Koordinator nicht erreichbar",
+        "es": "Coordinador SLZB inaccesible"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "A coordinator stopped answering (two readings in a row): power, network cable, crash.",
+        "fr": "Un coordinateur ne répond plus (deux lectures de suite) : alimentation, câble réseau, plantage.",
+        "de": "Ein Koordinator antwortet nicht mehr (zwei Abfragen in Folge): Strom, Netzwerkkabel, Absturz.",
+        "es": "Un coordinador ha dejado de responder (dos lecturas seguidas): alimentación, cable de red, bloqueo."
+      },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Coordinator (empty: any)",
+            "fr": "Coordinateur (vide : n'importe lequel)",
+            "de": "Koordinator (leer: beliebig)",
+            "es": "Coordinador (vacío: cualquiera)"
+          }
         }
       ],
-      "outputs": [
+      "variables": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "coordinator",
+          "type": "string",
+          "label": {
+            "en": "Coordinator name",
+            "fr": "Nom du coordinateur",
+            "de": "Name des Koordinators",
+            "es": "Nombre del coordinador"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Coordinator device",
+            "fr": "Appareil coordinateur",
+            "de": "Koordinator-Gerät",
+            "es": "Dispositivo coordinador"
+          }
+        },
+        {
+          "key": "error",
+          "type": "string",
+          "label": {
+            "en": "What happened",
+            "fr": "Ce qui s'est passé",
+            "de": "Was passiert ist",
+            "es": "Lo que ha pasado"
+          }
+        }
+      ]
+    },
+    {
+      "key": "coordinator_recovered",
+      "label": {
+        "en": "SLZB coordinator back",
+        "fr": "Coordinateur SLZB de retour",
+        "de": "SLZB-Koordinator wieder da",
+        "es": "Coordinador SLZB de vuelta"
+      },
+      "description": {
+        "en": "A coordinator that stopped answering answers again, with how long it was gone.",
+        "fr": "Un coordinateur qui ne répondait plus répond de nouveau, avec la durée de son absence.",
+        "de": "Ein Koordinator, der nicht mehr antwortete, antwortet wieder, mit der Dauer seines Ausfalls.",
+        "es": "Un coordinador que había dejado de responder vuelve a responder, con la duración de su ausencia."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Coordinator (empty: any)",
+            "fr": "Coordinateur (vide : n'importe lequel)",
+            "de": "Koordinator (leer: beliebig)",
+            "es": "Coordinador (vacío: cualquiera)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "coordinator",
+          "type": "string",
+          "label": {
+            "en": "Coordinator name",
+            "fr": "Nom du coordinateur",
+            "de": "Name des Koordinators",
+            "es": "Nombre del coordinador"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Coordinator device",
+            "fr": "Appareil coordinateur",
+            "de": "Koordinator-Gerät",
+            "es": "Dispositivo coordinador"
+          }
+        },
+        {
+          "key": "down_minutes",
+          "type": "number",
+          "label": {
+            "en": "Minutes without answer",
+            "fr": "Minutes sans réponse",
+            "de": "Minuten ohne Antwort",
+            "es": "Minutos sin respuesta"
+          }
+        }
+      ]
+    },
+    {
+      "key": "coordinator_restarted",
+      "label": {
+        "en": "SLZB coordinator restarted",
+        "fr": "Coordinateur SLZB redémarré",
+        "de": "SLZB-Koordinator neu gestartet",
+        "es": "Coordinador SLZB reiniciado"
+      },
+      "description": {
+        "en": "A coordinator started again (its uptime went back to zero): power cut, crash, firmware update or restart command.",
+        "fr": "Un coordinateur a redémarré (son temps de fonctionnement est revenu à zéro) : coupure, plantage, mise à jour ou commande de redémarrage.",
+        "de": "Ein Koordinator ist neu gestartet (seine Betriebszeit ging auf null zurück): Stromausfall, Absturz, Update oder Neustartbefehl.",
+        "es": "Un coordinador se ha reiniciado (su tiempo de funcionamiento volvió a cero): corte, bloqueo, actualización u orden de reinicio."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Coordinator (empty: any)",
+            "fr": "Coordinateur (vide : n'importe lequel)",
+            "de": "Koordinator (leer: beliebig)",
+            "es": "Coordinador (vacío: cualquiera)"
+          }
+        },
+        {
+          "key": "origin",
+          "type": "select",
+          "label": {
+            "en": "Origin (empty: any)",
+            "fr": "Origine (vide : toutes)",
+            "de": "Ursprung (leer: beliebig)",
+            "es": "Origen (vacío: cualquiera)"
+          },
+          "options": [
+            {
+              "value": "other",
+              "label": {
+                "en": "Not from Gladys",
+                "fr": "Hors de Gladys",
+                "de": "Nicht von Gladys",
+                "es": "Fuera de Gladys"
+              }
+            },
+            {
+              "value": "gladys",
+              "label": {
+                "en": "From Gladys",
+                "fr": "Depuis Gladys",
+                "de": "Von Gladys",
+                "es": "Desde Gladys"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "coordinator",
+          "type": "string",
+          "label": {
+            "en": "Coordinator name",
+            "fr": "Nom du coordinateur",
+            "de": "Name des Koordinators",
+            "es": "Nombre del coordinador"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Coordinator device",
+            "fr": "Appareil coordinateur",
+            "de": "Koordinator-Gerät",
+            "es": "Dispositivo coordinador"
+          }
+        },
+        {
+          "key": "origin",
+          "type": "string",
+          "label": {
+            "en": "Origin (gladys, other)",
+            "fr": "Origine (gladys, other)",
+            "de": "Ursprung (gladys, other)",
+            "es": "Origen (gladys, other)"
+          }
+        },
+        {
+          "key": "previous_uptime_hours",
+          "type": "number",
+          "label": {
+            "en": "Previous uptime in hours",
+            "fr": "Temps de fonctionnement précédent en heures",
+            "de": "Vorherige Betriebszeit in Stunden",
+            "es": "Tiempo de funcionamiento anterior en horas"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "slzb",
+      "label": {
+        "en": "SLZB coordinator",
+        "fr": "Coordinateur SLZB",
+        "de": "SLZB-Koordinator",
+        "es": "Coordinador SLZB"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Temperatures, uptime, Zigbee client, network, firmware and restarts of a coordinator.",
+        "fr": "Températures, temps de marche, client Zigbee, réseau, firmware et redémarrages du coordinateur.",
+        "de": "Temperaturen, Laufzeit, Zigbee-Client, Netzwerk, Firmware und Neustarts eines Koordinators.",
+        "es": "Temperaturas, tiempo encendido, cliente Zigbee, red, firmware y reinicios de un coordinador."
+      },
+      "icon": "cpu",
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Coordinator (empty: the first one)",
+            "fr": "Coordinateur (vide : le premier)",
+            "de": "Koordinator (leer: der erste)",
+            "es": "Coordinador (vacío: el primero)"
+          }
+        }
+      ],
+      "action_timeout_seconds": 20
     }
   ]
 }
