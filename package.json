@@ -1,6 +1,6 @@
 {
   "name": "gladys-smlight",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "SMLIGHT SLZB Zigbee coordinators for Gladys Assistant: health, firmware updates, restarts, over the local network.",
   "type": "module",

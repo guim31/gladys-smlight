@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-13
+
 ### Added
 
 - One Gladys device per SMLIGHT SLZB coordinator (SLZB-06, -06M, -06p7,
@@ -32,4 +34,5 @@ the notes of the version's GitHub Release.
   wrong.
 - Documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-smlight/commits/main
+[Unreleased]: https://github.com/guim31/gladys-smlight/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-smlight/releases/tag/v1.0.1
